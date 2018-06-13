@@ -185,28 +185,19 @@ public abstract class HttpClientProcessorTests {
 			"httpclient.urlExpression='http://localhost:' + @environment.getProperty('local.server.port') + '/methodTest'",
 			"httpclient.httpMethodExpression=payload matches '.*\"type\":\"update\".*' ? 'PUT' : 'POST'"
 	})
-	public static class TestRequestWithMethodExpressionPutTests extends HttpClientProcessorTests {
+	public static class TestRequestWithMethodExpressionTests extends HttpClientProcessorTests {
 
 		@Test
-		public void testRequest() {
-			channels.input().send(new GenericMessage<Object>("{\"type\":\"create\"}"));
-			assertThat(messageCollector.forChannel(channels.output()), receivesPayloadThat(containsString("Create")));
-		}
-
-	}
-
-	@TestPropertySource(properties = {
-			"httpclient.urlExpression='http://localhost:' + @environment.getProperty('local.server.port') + '/methodTest'",
-			"httpclient.httpMethodExpression=payload matches '.*\"type\":\"update\".*' ? 'PUT' : 'POST'"
-	})
-	public static class TestRequestWithMethodExpressionPostTests extends HttpClientProcessorTests {
-
-		@Test
-		public void testRequest() {
+		public void testPutRequest() {
 			channels.input().send(new GenericMessage<Object>("{\"type\":\"update\"}"));
 			assertThat(messageCollector.forChannel(channels.output()), receivesPayloadThat(containsString("Update")));
 		}
 
+        @Test
+        public void testPostRequest() {
+            channels.input().send(new GenericMessage<Object>("{\"type\":\"create\"}"));
+            assertThat(messageCollector.forChannel(channels.output()), receivesPayloadThat(containsString("Create")));
+        }
 	}
 
 	@RestController
