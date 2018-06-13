@@ -36,6 +36,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -180,6 +181,25 @@ public abstract class HttpClientProcessorTests {
 
 	}
 
+	@TestPropertySource(properties = {
+			"httpclient.urlExpression='http://localhost:' + @environment.getProperty('local.server.port') + '/methodTest'",
+			"httpclient.httpMethodExpression=payload matches '.*\"type\":\"update\".*' ? 'PUT' : 'POST'"
+	})
+	public static class TestRequestWithMethodExpressionTests extends HttpClientProcessorTests {
+
+		@Test
+		public void testPutRequest() {
+			channels.input().send(new GenericMessage<Object>("{\"type\":\"update\"}"));
+			assertThat(messageCollector.forChannel(channels.output()), receivesPayloadThat(containsString("Update")));
+		}
+
+        @Test
+        public void testPostRequest() {
+            channels.input().send(new GenericMessage<Object>("{\"type\":\"create\"}"));
+            assertThat(messageCollector.forChannel(channels.output()), receivesPayloadThat(containsString("Create")));
+        }
+	}
+
 	@RestController
 	public static class AdditionalController {
 
@@ -201,6 +221,21 @@ public abstract class HttpClientProcessorTests {
 			return "id";
 		}
 
+		@PutMapping("/methodTest")
+		public String updateTest(@RequestBody(required = false) String stuff) {
+			if (stuff == null) {
+				stuff = "World";
+			}
+			return "Update " + stuff;
+		}
+
+		@PostMapping("/methodTest")
+		public String postTest(@RequestBody(required = false) String stuff) {
+			if (stuff == null) {
+				stuff = "World";
+			}
+			return "Create " + stuff;
+		}
 	}
 
 	@SpringBootApplication
